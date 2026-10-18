@@ -507,10 +507,46 @@ $btnInstall.Add_Click({
     }
 
     $pnlStatus.Visibility = [System.Windows.Visibility]::Visible
-    $lblFinalStatus.Text = "جاري إعداد وتثبيت البرنامج مع تطبيق التحصين الأمني..."
+    $lblFinalStatus.Text = "جاري تنظيف أي نسخة قديمة..."
     $lblFinalStatus.Foreground = [System.Windows.Media.Brushes]::LightBlue
+    [System.Windows.Forms.Application]::DoEvents()
 
     try {
+        # 0. Clean up any previous installation
+        $ErrorActionPreference = 'SilentlyContinue'
+
+        # 0a. Stop any running instance
+        Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe'" |
+            Where-Object { $_.CommandLine -like '*screen_to_telegram.ps1*' } |
+            ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+
+        # 0b. Remove all Startup shortcuts
+        @(
+            (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup\ScreenToTelegram.lnk'),
+            (Join-Path $env:ALLUSERSPROFILE 'Microsoft\Windows\Start Menu\Programs\Startup\ScreenToTelegram.lnk')
+        ) | ForEach-Object { if (Test-Path $_) { Remove-Item -Force $_ } }
+
+        # 0c. Remove hidden backup
+        $bkDir = Join-Path $env:APPDATA "Microsoft\.stt-bk"
+        if (Test-Path $bkDir) { Remove-Item -Recurse -Force $bkDir }
+
+        # 0d. Clean old installation directories (ProgramData + target if different)
+        $oldDirs = @("C:\ProgramData\ScreenToTelegram", $targetDir) | Select-Object -Unique
+        $preserveFiles = @('config.json')
+        foreach ($dir in $oldDirs) {
+            if (Test-Path $dir) {
+                & icacls "$dir" /reset /t /c /q *>&1 | Out-Null
+                Get-ChildItem -Path $dir -Force | Where-Object {
+                    $_.Name -notin $preserveFiles
+                } | Remove-Item -Recurse -Force
+            }
+        }
+
+        $ErrorActionPreference = 'Continue'
+
+        $lblFinalStatus.Text = "جاري إعداد وتثبيت البرنامج مع تطبيق التحصين الأمني..."
+        [System.Windows.Forms.Application]::DoEvents()
+
         # 1. Create Target Directory if needed
         if (-not (Test-Path $targetDir)) {
             New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
