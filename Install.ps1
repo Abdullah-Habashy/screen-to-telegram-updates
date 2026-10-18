@@ -1,4 +1,4 @@
-<#
+﻿<#
     ScreenToTelegram - Setup Wizard (self-elevating)
     Right-click this file -> "Run with PowerShell"
     Or from any PowerShell window:
