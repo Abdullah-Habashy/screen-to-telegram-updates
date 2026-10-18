@@ -1,0 +1,27 @@
+{
+  "device_name": "My PC",
+  "telegram": {
+    "bot_token": "PASTE_YOUR_BOT_TOKEN_HERE",
+    "chat_id": "PASTE_FATHER_CHAT_ID_HERE"
+  },
+  "interval": {
+    "min_seconds": 30,
+    "max_seconds": 300
+  },
+  "screenshots": {
+    "folder": "screenshots",
+    "quality_height": 480,
+    "jpeg_quality": 60,
+    "blur_strength": 0,
+    "keep_after_send": false,
+    "max_pending_mb": 500
+  },
+  "heartbeat": {
+    "every_hours": 24
+  },
+  "update": {
+    "enabled": true,
+    "base_url": "https://raw.githubusercontent.com/Abdullah-Habashy/screen-to-telegram-updates/main",
+    "check_every_minutes": 60
+  }
+}

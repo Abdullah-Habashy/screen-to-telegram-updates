@@ -1,0 +1,6 @@
+config.json
+screenshots/
+*.prev.ps1
+keys/update_signing_key.xml
+samples/
+*.log
