@@ -578,7 +578,7 @@ $btnInstall.Add_Click({
         $config = [ordered]@{
             device_name = $dev
             telegram    = [ordered]@{ bot_token = $token; chat_id = "$chat" }
-            interval    = [ordered]@{ min_seconds = 30; max_seconds = 300 }
+            interval    = [ordered]@{ min_seconds = 30; max_seconds = 180 }
             screenshots = [ordered]@{
                 folder         = 'screenshots'
                 quality_height = [int]$qHeight
