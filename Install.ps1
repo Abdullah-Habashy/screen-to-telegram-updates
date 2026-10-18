@@ -6,14 +6,16 @@
 #>
 
 # --- Self-elevate to Administrator if not already ---
+$ErrorActionPreference = 'SilentlyContinue'
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+$ErrorActionPreference = 'Continue'
 if (-not $isAdmin) {
     $selfPath = $MyInvocation.MyCommand.Path
     if (-not $selfPath) { $selfPath = $PSCommandPath }
     try {
         Start-Process "$PSHOME\powershell.exe" `
             -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$selfPath`"" `
-            -Verb RunAs
+            -Verb RunAs -ErrorAction Stop
     } catch {
         [System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null
         [System.Windows.Forms.MessageBox]::Show(
@@ -24,11 +26,13 @@ if (-not $isAdmin) {
 }
 
 # --- Fix ProgramData permissions if folder exists ---
+$ErrorActionPreference = 'SilentlyContinue'
 if (Test-Path "C:\ProgramData\ScreenToTelegram") {
-    takeown /f "C:\ProgramData\ScreenToTelegram" /r /d y 2>&1 | Out-Null
-    icacls "C:\ProgramData\ScreenToTelegram" /reset /t /c /q 2>&1 | Out-Null
-    icacls "C:\ProgramData\ScreenToTelegram" /grant:r "SYSTEM:(OI)(CI)F" "Administrators:(OI)(CI)F" "Users:(OI)(CI)M" /t /c /q 2>&1 | Out-Null
+    takeown /f "C:\ProgramData\ScreenToTelegram" /r /d y *>&1 | Out-Null
+    icacls "C:\ProgramData\ScreenToTelegram" /reset /t /c /q *>&1 | Out-Null
+    icacls "C:\ProgramData\ScreenToTelegram" /grant:r "SYSTEM:(OI)(CI)F" "Administrators:(OI)(CI)F" "Users:(OI)(CI)M" /t /c /q *>&1 | Out-Null
 }
+$ErrorActionPreference = 'Continue'
 
 # --- GUI starts here ---
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms, System.Drawing, System.Security
