@@ -11,27 +11,33 @@ rem  The PowerShell GUI code lives after a marker near the end of this file.
 rem ============================================================================
 
 net session >nul 2>&1
-if %errorLevel% neq 0 (
-    echo Requesting Administrator privileges for setup...
-    powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c `"%~f0`"' -Verb RunAs"
-    exit /b
-)
+if %errorLevel% neq 0 goto :elevate
+goto :run
 
+:elevate
+echo Requesting Administrator privileges for setup...
+powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c \"%~f0\"' -Verb RunAs"
+exit /b
+
+:run
 if exist "C:\ProgramData\ScreenToTelegram" (
     takeown /f "C:\ProgramData\ScreenToTelegram" /r /d y >nul 2>&1
     icacls "C:\ProgramData\ScreenToTelegram" /reset /t /c /q >nul 2>&1
-    icacls "C:\ProgramData\ScreenToTelegram" /grant:r "SYSTEM:(OI)(CI)F" "Administrators:(OI)(CI)F" "Users:(OI)(CI)M" /t /c /q >nul 2>&1
 )
+icacls "C:\ProgramData\ScreenToTelegram" /grant:r "SYSTEM:(OI)(CI)F" "Administrators:(OI)(CI)F" "Users:(OI)(CI)M" /t /c /q >nul 2>&1
 
 set "STT_SOURCE_DIR=%~dp0"
 set "PS1=%TEMP%\stt_install_gui.ps1"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$t=Get-Content -LiteralPath '%~f0' -Raw -Encoding UTF8; $m='#PS'+'BEGIN'; $i=$t.IndexOf($m); if($i -lt 0){exit 9}; [IO.File]::WriteAllText($env:PS1, $t.Substring($i + $m.Length), (New-Object Text.UTF8Encoding $false))"
-if not exist "%PS1%" (
-    echo ERROR: Could not extract the PowerShell installer. Check execution policy.
-    pause
-    exit /b 1
-)
+if not exist "%PS1%" goto :extractfail
+goto :launch
 
+:extractfail
+echo ERROR: Could not extract the PowerShell installer. Check execution policy.
+pause
+exit /b 1
+
+:launch
 powershell -NoProfile -ExecutionPolicy Bypass -File "%PS1%"
 del /q "%PS1%" >nul 2>&1
 exit /b
